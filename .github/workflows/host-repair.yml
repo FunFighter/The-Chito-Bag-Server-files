@@ -24,6 +24,18 @@ on:
         description: 'Attempt an unprivileged reboot (may need console access instead)'
         type: boolean
         default: false
+      set_heap:
+        description: 'New MC_XMX, e.g. 21G. Blank leaves memory untouched.'
+        type: string
+        default: ''
+      set_mem_limit:
+        description: 'New MC_MEM_LIMIT, e.g. 26g. Must exceed the heap.'
+        type: string
+        default: ''
+      bring_up:
+        description: 'Start Minecraft afterwards'
+        type: boolean
+        default: false
 
 jobs:
   repair:
@@ -71,6 +83,37 @@ jobs:
           docker stop --timeout 200 chitobag-server
           echo "exit code: $(docker inspect -f '{{.State.ExitCode}}' chitobag-server)"
           docker logs chitobag-server 2>&1 | grep -a 'All dimensions are saved' | tail -1
+
+      - name: Resize the Minecraft heap
+        if: inputs.set_heap != ''
+        run: |
+          set -euo pipefail
+          ENV_FILE=/srv/chitobag/.env
+          cp "$ENV_FILE" "$ENV_FILE.bak-$(date +%Y%m%d-%H%M%S)"
+          sed -i "s/^MC_XMS=.*/MC_XMS=${{ inputs.set_heap }}/" "$ENV_FILE"
+          sed -i "s/^MC_XMX=.*/MC_XMX=${{ inputs.set_heap }}/" "$ENV_FILE"
+          if [ -n "${{ inputs.set_mem_limit }}" ]; then
+            sed -i "s/^MC_MEM_LIMIT=.*/MC_MEM_LIMIT=${{ inputs.set_mem_limit }}/" "$ENV_FILE"
+          fi
+          grep -E '^MC_XMS|^MC_XMX|^MC_MEM_LIMIT|^MC_CPUS|^MC_BG_THREADS' "$ENV_FILE"
+
+      - name: Bring Minecraft up
+        if: inputs.bring_up
+        run: |
+          set -euo pipefail
+          cd /srv/chitobag/repo
+          docker compose --env-file /srv/chitobag/.env up -d
+          echo "waiting for healthy..."
+          for i in $(seq 1 80); do
+            s=$(docker inspect -f '{{.State.Health.Status}}' chitobag-server 2>/dev/null || echo missing)
+            [ "$s" = healthy ] && { echo "healthy after $((i*15))s"; break; }
+            [ "$(docker inspect -f '{{.State.Running}}' chitobag-server 2>/dev/null)" != true ] && {
+              echo "::error::container exited"; docker logs chitobag-server --tail 60; exit 1; }
+            sleep 15
+          done
+          docker stats --no-stream --format 'mem={{.MemUsage}} mem%={{.MemPerc}}' chitobag-server
+          free -h
+          grep -E '^-Xm' /srv/chitobag/data/user_jvm_args.txt
 
       - name: Attempt unprivileged reboot
         if: inputs.try_reboot
