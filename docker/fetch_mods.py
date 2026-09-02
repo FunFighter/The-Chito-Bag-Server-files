@@ -55,9 +55,18 @@ def resolve_and_download(entry):
                     if exc.code in (401, 403):
                         if not _AUTH_WARNED:
                             _AUTH_WARNED = True
+                            # Surface what CurseForge actually said -- "403" alone
+                            # cannot distinguish a bad key from a key that lacks
+                            # access to this endpoint.
+                            try:
+                                detail = exc.read().decode("utf-8", "replace")[:300].strip()
+                            except Exception:
+                                detail = "(no response body)"
                             print(f"[fetch] WARNING: CurseForge rejected the API key "
-                                  f"(HTTP {exc.code}); falling back to the public "
-                                  f"endpoint for all downloads", flush=True)
+                                  f"(HTTP {exc.code}): {detail or '(empty body)'}",
+                                  flush=True)
+                            print("[fetch] falling back to the public endpoint for "
+                                  "all downloads", flush=True)
                         _USE_OFFICIAL = False
                         continue
                     raise

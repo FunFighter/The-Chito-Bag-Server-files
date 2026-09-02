@@ -23,33 +23,53 @@ question: the image is built and consumed on the same box and never published.
 
 ## Set up the self-hosted runner
 
-> **Only attach a self-hosted runner to a private repo.** On a public repo,
-> anyone can open a pull request that executes arbitrary code on your machine.
+### Why a self-hosted runner is safe here despite the public repo
 
-1. Push this repo to GitHub as **private**.
+The usual warning is that a self-hosted runner on a public repo lets anyone run
+code on your machine via a fork pull request. That attack needs a workflow that
+triggers on `pull_request`. This one does not:
 
-2. On the server: *Repo → Settings → Actions → Runners → New self-hosted runner*
-   and follow the shown commands. Then give it the label the workflow expects:
+```yaml
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+```
 
-   ```bash
-   cd ~/actions-runner
-   ./config.sh --url https://github.com/<you>/<repo> --token <TOKEN> \
-               --labels chitobag --name chitobag-host --unattended
-   sudo ./svc.sh install
-   sudo ./svc.sh start
-   ```
+A fork PR cannot produce a `push` event on the base repo, and `workflow_dispatch`
+requires write access. Repo settings back this up — workflow tokens default to
+`read` and cannot approve pull requests.
 
-3. The runner user needs Docker access and a checkout that already has `.env`:
+**The rule that keeps this safe: never add a `pull_request` trigger to any
+workflow in this repo.** The runner is long-lived and runs as `brandonl`, who is
+in the `docker` group — which is root-equivalent. A single `pull_request` trigger
+would hand that to any stranger. Make the repo private if you ever need one.
 
-   ```bash
-   sudo usermod -aG docker "$USER"     # log out and back in
-   cp .env.example .env                # then edit it -- see below
-   ```
+### Registering the runner
 
-   `.env` is intentionally *not* in git (it holds host-specific paths). The
-   workflow fails fast with a clear message if it is missing.
+On the server (already staged at `/srv/chitobag/actions-runner`):
 
-4. Push to `main`, or run the workflow manually from the Actions tab.
+```bash
+cd /srv/chitobag/actions-runner
+./config.sh --url https://github.com/FunFighter/The-Chito-Bag-Server-files \
+            --token <TOKEN> --labels chitobag --name wonton --unattended
+sudo ./svc.sh install brandonl
+sudo ./svc.sh start
+```
+
+Get `<TOKEN>` from *Settings → Actions → Runners → New self-hosted runner*, or:
+
+```bash
+gh api -X POST repos/FunFighter/The-Chito-Bag-Server-files/actions/runners/registration-token --jq .token
+```
+
+It expires in an hour. The `chitobag` label is what `runs-on` matches.
+
+The runner needs Docker access and a checkout that already has `.env` — both are
+already in place on `wonton`. `.env` is intentionally not in git (host-specific
+paths and the data directory); the workflow fails fast if it is missing.
+
+Then push to `main`, or run the workflow from the Actions tab.
 
 [.github/workflows/deploy.yml](.github/workflows/deploy.yml) checks the drive is
 mounted, builds, warns players over the console, restarts, and waits for the
@@ -96,6 +116,7 @@ deploy — an unmounted drive and a restart that does not wait for the world sav
 | | |
 |---|---|
 | Host | `wonton`, CachyOS, Ryzen 9 7945HX3D (32 threads), 30 GB RAM |
+| Repo | [FunFighter/The-Chito-Bag-Server-files](https://github.com/FunFighter/The-Chito-Bag-Server-files) (public) |
 | Repo checkout | `/srv/chitobag/repo` |
 | World data | `/srv/chitobag/data` (btrfs, COW disabled — see below) |
 | CurseForge key | `/srv/chitobag/cf_api_key.txt`, mode 600, deliberately outside the checkout |
