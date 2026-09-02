@@ -64,14 +64,50 @@ the entrypoint escalates if the JVM lingers.
 
 Never `docker kill` the container, and do not lower `stop_grace_period`.
 
-## Changing the pack
+## Adding a mod
+
+```bash
+tools/add-mod.py https://www.curseforge.com/minecraft/mc-mods/<slug>
+git commit -am "Add <mod>" && git push
+```
+
+That is the whole flow. The push triggers the deploy workflow, which rebuilds
+the image on the runner, restarts the server and waits for it to report healthy.
+
+The script finds the newest file matching the pack's Minecraft version and
+loader, appends it to `manifest.json`, and — if CurseForge tags the mod
+Client — also lists it in `docker/client_only.txt` so it is kept out of the
+server image. Nothing else needs editing.
+
+```bash
+tools/add-mod.py <slug> --dry-run           # show what would change
+tools/add-mod.py <slug> --file-id 1234567   # pin an exact file
+tools/add-mod.py 429235                     # by project ID
+```
+
+A slug that returns 404 just means cfwidget has not indexed it; pass the numeric
+**Project ID** from the mod's CurseForge page instead. Re-running for a mod
+already in the pack repins its file, so this is also how you upgrade one.
+
+To check before pushing:
+
+```bash
+docker compose build && docker compose up -d
+```
+
+### Clients need updating too
+
+Server and client are not the same mod set. `manifest.json` is the *client* pack
+as well, so anyone importing it gets the client-only mods too. Regenerate the
+pack zip from `manifest.json` after adding a mod, or players will be missing it.
+
+## Changing the pack by hand
 
 Edit `manifest.json` (or `overrides/`), then `docker compose up -d --build`.
 The entrypoint reconciles `/data/mods` against the new image on the next start.
 
 To exclude a mod from the server only — client-only mods crash a dedicated
 server — add its CurseForge project ID to [docker/client_only.txt](docker/client_only.txt).
-Smooth Swapping is already listed.
 
 ## Memory
 
