@@ -1,0 +1,85 @@
+# One-off host maintenance, dispatched manually. Authorised by the repo owner.
+#
+# Background: `systemctl isolate multi-user.target` left PAM wedged on wonton --
+# sshd completes key exchange then blocks on systemd-logind, so SSH logins hang.
+# The self-hosted runner still works because it polls outbound and never uses
+# PAM, which makes it the only remaining way to act on the box.
+#
+# Every step here runs as the ordinary runner user. Nothing escalates.
+
+name: Host repair (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      disable_palworld:
+        description: 'Pin the Palworld stack to restart:no'
+        type: boolean
+        default: true
+      stop_minecraft:
+        description: 'Warn players and stop Minecraft cleanly (do this before any reboot)'
+        type: boolean
+        default: true
+      try_reboot:
+        description: 'Attempt an unprivileged reboot (may need console access instead)'
+        type: boolean
+        default: false
+
+jobs:
+  repair:
+    runs-on: [self-hosted, chitobag]
+    timeout-minutes: 25
+    steps:
+      - name: Report host state
+        run: |
+          set +e
+          echo "::group::memory";   free -h;                                  echo "::endgroup::"
+          echo "::group::uptime";   uptime;                                   echo "::endgroup::"
+          echo "::group::top rss";  ps -eo rss,comm --sort=-rss | head -14;   echo "::endgroup::"
+          echo "::group::desktop";  ps -eo rss,comm --no-headers | awk '/cosmic|Xwayland|greeter/{s+=$1;n++} END{printf "%d procs, %.0f MB\n", n+0, s/1024}'; echo "::endgroup::"
+          echo "::group::default target"; systemctl get-default;              echo "::endgroup::"
+          echo "::group::containers"; docker ps -a --format '{{.Names}} {{.Status}}'; echo "::endgroup::"
+
+      - name: Pin Palworld to restart:no
+        if: inputs.disable_palworld
+        run: |
+          set +e
+          echo "--- docker update (container was pruned earlier; 'No such container' is expected)"
+          docker update --restart=no palworld-server
+          echo "    exit=$?"
+          set -e
+          cd ~/palworld
+          cp -n docker-compose.yml docker-compose.yml.bak-prereboot 2>/dev/null || true
+          sed -i 's/^\( *\)restart: always/\1restart: "no"/' docker-compose.yml
+          echo "--- restart policy in compose now:"
+          grep -nE '^\s*restart:' docker-compose.yml || echo "    (no restart: key present)"
+          echo "--- container state (expect absent, or Exited):"
+          docker ps -a --format '{{.Names}} {{.Status}}' | grep -i palworld || echo "    palworld-server: not present"
+
+      - name: Warn players and stop Minecraft cleanly
+        if: inputs.stop_minecraft
+        run: |
+          set +e
+          docker exec chitobag-server mc-cmd "say Server going down for maintenance in 30 seconds."
+          sleep 20
+          docker exec chitobag-server mc-cmd "say Going down now - back shortly."
+          sleep 10
+          set -e
+          # RCON stop saves every dimension. Do this explicitly rather than
+          # letting a reboot hand it to dockerd, whose shutdown timeout is much
+          # shorter than stop_grace_period and could SIGKILL mid-save.
+          docker stop --timeout 200 chitobag-server
+          echo "exit code: $(docker inspect -f '{{.State.ExitCode}}' chitobag-server)"
+          docker logs chitobag-server 2>&1 | grep -a 'All dimensions are saved' | tail -1
+
+      - name: Attempt unprivileged reboot
+        if: inputs.try_reboot
+        run: |
+          set +e
+          echo "systemctl reboot (succeeds only if polkit grants it):"
+          systemctl reboot
+          rc=$?
+          echo "  exit=$rc"
+          if [ $rc -ne 0 ]; then
+            echo "::warning::Unprivileged reboot refused. Power-cycle from the console instead."
+          fi
