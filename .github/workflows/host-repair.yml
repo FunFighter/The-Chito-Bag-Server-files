@@ -102,6 +102,12 @@ jobs:
         run: |
           set -euo pipefail
           cd /srv/chitobag/repo
+          # This checkout is only used for manual operations, so it drifts.
+          # Without the `name: chitobag` pin added later, compose derives the
+          # project from the directory ("repo") and collides on container_name.
+          git fetch -q origin main && git reset -q --hard origin/main
+          echo "checkout now at $(git rev-parse --short HEAD)"
+          grep -E '^name:' docker-compose.yml || echo "::warning::no project name pin"
           docker compose --env-file /srv/chitobag/.env up -d
           echo "waiting for healthy..."
           for i in $(seq 1 80); do
