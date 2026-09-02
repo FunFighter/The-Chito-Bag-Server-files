@@ -1,0 +1,8 @@
+{
+  "direct_hit_damage": 7.0,
+  "spawn_rift_on_entity_hit": true,
+  "spawn_rift_on_block_hit": true,
+  "discard_after_entity_hit": true,
+  "discard_after_block_hit": true,
+  "allow_pickup": false
+}

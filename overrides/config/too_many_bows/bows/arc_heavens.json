@@ -1,0 +1,13 @@
+{
+  "direct_hit_damage_override": -1.0,
+  "summon_lightning_on_entity_hit": true,
+  "summon_lightning_on_in_ground": true,
+  "set_lightning_cause_from_owner": true,
+  "discard_after_lightning": true,
+  "trail_particles_enabled": true,
+  "trail_particle_count": 10,
+  "trail_particle_offset_xz": 0.5,
+  "trail_particle_offset_y": 0.5,
+  "trail_particle_velocity_y": 0.1,
+  "allow_pickup": true
+}

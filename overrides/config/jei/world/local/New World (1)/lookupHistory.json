@@ -1,0 +1,7 @@
+[
+  {"version":1},
+  {"ingredient":{"id":"simplybows:upgrades/enchanted_bow_string"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:lunar_feather"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:dream_catcher"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:dream_string"},"type":"item_stack","bookmarkType":"INGREDIENT"}
+]

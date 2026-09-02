@@ -1,0 +1,24 @@
+# ---- Secrets: never commit -------------------------------------------------
+.env
+docker/cf_api_key.txt
+*.key
+*.pem
+
+# ---- Rebuilt from source, never committed ----------------------------------
+# The whole point of docker/fetch_mods.py: mod jars are downloaded from
+# manifest.json at build time, so no jars are redistributed and the repo stays
+# small. server/ is a local bare-metal test install (~900 MB).
+server/
+neoforge-*-installer.jar
+*.zip
+
+# Local scratch
+*.log
+boot.log
+launch*.log
+
+# ---- Exceptions ------------------------------------------------------------
+# overrides/mods holds pack-local jars that are NOT on CurseForge and therefore
+# cannot be fetched at build time. Without these the image is incomplete.
+!overrides/mods/
+!overrides/mods/*.jar

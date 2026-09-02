@@ -1,0 +1,25 @@
+{
+  "direct_hit_damage_override": -1.0,
+  "bonus_damage_vs_raid_mobs_enabled": true,
+  "bonus_damage_base": 6.0,
+  "use_ranged_damage_attribute_for_bonus_damage": true,
+  "ranged_damage_attribute_namespace": "ranged_weapon",
+  "ranged_damage_attribute_path": "damage",
+  "ranged_damage_attribute_multiplier": 1.5,
+  "bonus_damage_scales_with_power_multiplier": true,
+  "raid_mob_whitelist": [
+    "minecraft:pillager",
+    "minecraft:vindicator",
+    "minecraft:evoker",
+    "minecraft:ravager",
+    "minecraft:illusioner",
+    "minecraft:witch"
+  ],
+  "impact_sound_enabled": true,
+  "impact_sound_volume": 0.7,
+  "impact_sound_pitch": 1.0,
+  "impact_particles_enabled": true,
+  "impact_particle_count": 10,
+  "impact_particle_offset_scale": 0.2,
+  "allow_pickup": true
+}

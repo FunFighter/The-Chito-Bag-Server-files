@@ -1,0 +1,32 @@
+{
+  "direct_hit_damage_override": -1.0,
+  "require_player_owner": true,
+  "require_target_dead_or_dying": true,
+  "use_cooked_drops_if_target_on_fire": true,
+  "passive_mob_whitelist": [
+    "minecraft:cow",
+    "minecraft:pig",
+    "minecraft:sheep",
+    "minecraft:chicken",
+    "minecraft:rabbit"
+  ],
+  "cow_beef_min": 1,
+  "cow_beef_max": 3,
+  "cow_leather_min": 0,
+  "cow_leather_max": 1,
+  "pig_pork_min": 1,
+  "pig_pork_max": 3,
+  "sheep_mutton_min": 1,
+  "sheep_mutton_max": 3,
+  "sheep_drop_wool_if_unsheared": true,
+  "chicken_meat_min": 1,
+  "chicken_meat_max": 1,
+  "chicken_feather_min": 0,
+  "chicken_feather_max": 2,
+  "rabbit_meat_min": 1,
+  "rabbit_meat_max": 2,
+  "rabbit_hide_min": 0,
+  "rabbit_hide_max": 1,
+  "rabbit_foot_chance": 0.1,
+  "allow_pickup": true
+}

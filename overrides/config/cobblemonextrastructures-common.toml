@@ -1,0 +1,11 @@
+[spawner_settings]
+	#Cooldown for static spawners (e.g., Legendaries).
+	#Default: 168000 ticks (7 days)
+	# Default: 168000
+	# Range: -1 ~ 1000000
+	static_spawner_cooldown = 168000
+	#Cooldown for randomized spawners (e.g., Dungeons).
+	#Default: 24000 ticks (1 day)
+	# Default: 24000
+	# Range: -1 ~ 1000000
+	random_spawner_cooldown = 24000

@@ -1,0 +1,17 @@
+{
+  "direct_hit_damage": 7.0,
+  "link_damage_enabled": true,
+  "link_radius": 6.0,
+  "max_links": 4,
+  "link_damage_multiplier": 0.45,
+  "minimum_link_damage": 1.0,
+  "trail_particles_enabled": true,
+  "base_trail_samples": 6,
+  "max_extra_trail_samples": 6,
+  "extra_samples_distance_divisor": 0.75,
+  "trail_spread": 0.01,
+  "hit_sound_volume": 1.0,
+  "hit_sound_pitch": 1.35,
+  "discard_after_entity_hit": true,
+  "allow_pickup": false
+}

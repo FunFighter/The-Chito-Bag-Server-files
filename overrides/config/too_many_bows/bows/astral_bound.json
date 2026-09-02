@@ -1,0 +1,13 @@
+{
+  "direct_hit_damage": 7.0,
+  "starting_ricochet_count": 3,
+  "max_ricochets": 6,
+  "ricochet_velocity_multiplier": 0.7,
+  "ricochet_position_offset": 0.1,
+  "ricochet_sound_volume": 1.0,
+  "ricochet_sound_pitch": 1.0,
+  "discard_when_too_slow": true,
+  "minimum_speed_sqr_before_discard": 0.01,
+  "discard_after_entity_hit": true,
+  "allow_pickup": true
+}

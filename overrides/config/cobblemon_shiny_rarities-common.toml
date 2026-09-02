@@ -1,0 +1,4 @@
+#Whether the Shiny Charm advancement tree is enabled.
+#When disabled, all shiny charm advancements are removed and no progress is tracked.
+#Shiny rarity textures (rare/epic) still function independently.
+enableShinyCharm = true

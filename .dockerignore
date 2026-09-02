@@ -1,0 +1,12 @@
+# The build downloads CurseForge mods itself; never ship the local server tree
+# (~900 MB) or the assembled zips into the build context.
+server/
+*.zip
+*.jar
+.git/
+.env
+docker/cf_api_key.txt
+
+# ...but overrides/mods holds pack-local jars that are NOT on CurseForge and
+# must reach the image.
+!overrides/mods/*.jar

@@ -1,0 +1,10 @@
+{
+  "direct_hit_damage_override": -1.0,
+  "start_vacuum_on_hit": true,
+  "vacuum_duration_ticks": 80,
+  "vacuum_radius": 5.0,
+  "vacuum_pull_strength": 0.2,
+  "vacuum_affects_owner": false,
+  "vacuum_affects_only_living_entities": true,
+  "allow_pickup": true
+}

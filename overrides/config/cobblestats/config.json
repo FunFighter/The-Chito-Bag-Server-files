@@ -1,0 +1,10 @@
+{
+  "ForceHidePokeball": false,
+  "AccuratePokeballIfAvailable": true,
+  "ShowPokemonType": true,
+  "ShowStatsStages": true,
+  "ShowTerrain": true,
+  "ShowHazards": true,
+  "ShowWeather": true,
+  "ShowOther": true
+}

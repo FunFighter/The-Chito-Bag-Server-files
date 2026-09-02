@@ -1,0 +1,94 @@
+# The Chito Bag Server -- Minecraft 1.21.1 / NeoForge 21.1.248
+#
+#   cp .env.example .env      # then edit MC_DATA_DIR and accept the EULA
+#   docker compose up -d --build
+#   docker compose logs -f
+#   docker attach chitobag-server        # server console (Ctrl-P Ctrl-Q to detach)
+#   docker compose stop                  # graceful; waits for the world to save
+
+services:
+  chitobag:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        NEOFORGE_VERSION: ${NEOFORGE_VERSION:-21.1.248}
+        JAVA_VERSION: "21"
+      secrets:
+        - cf_api_key
+    image: chitobag-server:${NEOFORGE_VERSION:-21.1.248}
+    container_name: chitobag-server
+    restart: unless-stopped
+
+    # Keeps the Minecraft console attachable via `docker attach`.
+    stdin_open: true
+    tty: true
+
+    # Mod loading plus a full world save takes well over the 10s default.
+    # A SIGKILL mid-save corrupts region files, so give it room.
+    stop_grace_period: 180s
+
+    ports:
+      # Java Edition gameplay is TCP only.
+      - "${MC_PORT:-25565}:25565/tcp"
+      # Simple Voice Chat (in this pack) needs its own UDP port, and it must be
+      # reachable directly -- it does not tunnel over the Minecraft connection.
+      # Without this, players connect fine but voice silently never works.
+      - "${MC_VOICE_PORT:-24454}:24454/udp"
+
+    volumes:
+      # The external drive. Everything mutable -- world, configs, logs,
+      # player data, mods -- lives here and survives image rebuilds.
+      - type: bind
+        source: ${MC_DATA_DIR:?set MC_DATA_DIR in .env to a path on your drive}
+        target: /data
+        bind:
+          create_host_path: false   # fail loudly if the drive is not mounted
+
+    environment:
+      EULA: ${EULA:-false}
+      MC_XMS: ${MC_XMS:-4G}
+      MC_XMX: ${MC_XMX:-10G}
+      MC_MOTD: ${MC_MOTD:-The Chito Bag Server}
+      MC_MAX_PLAYERS: ${MC_MAX_PLAYERS:-20}
+      MC_ONLINE_MODE: ${MC_ONLINE_MODE:-true}
+      MC_VIEW_DISTANCE: ${MC_VIEW_DISTANCE:-8}
+      MC_SIMULATION_DISTANCE: ${MC_SIMULATION_DISTANCE:-6}
+      MC_VOICE_PORT: ${MC_VOICE_PORT:-24454}
+      # Seconds to let `stop` finish before escalating to SIGTERM.
+      # Keep it below stop_grace_period.
+      MC_STOP_TIMEOUT: ${MC_STOP_TIMEOUT:-120}
+      # Minecraft background worker pool + JVM pool sizing.
+      MC_BG_THREADS: ${MC_BG_THREADS:-}
+      # Match these to the owner of MC_DATA_DIR on the host (id -u / id -g).
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+
+    # Headroom over MC_XMX for JVM metaspace, GC structures and direct buffers.
+    mem_limit: ${MC_MEM_LIMIT:-13g}
+    # Leave the host a couple of cores; keep in step with MC_BG_THREADS.
+    cpus: ${MC_CPUS:-0}
+
+    healthcheck:
+      # Minecraft binds the port ~10s before it finishes loading, so a bare TCP
+      # check reports ready too early and a deploy gate would race it. Require
+      # the "Done (" marker in this boot's log as well.
+      test: ["CMD-SHELL", "grep -q 'Done (' /data/logs/latest.log 2>/dev/null && timeout 3 bash -c '</dev/tcp/127.0.0.1/25565' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # First boot generates every dimension; measured ~2.5 min on this pack.
+      start_period: 900s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+secrets:
+  cf_api_key:
+    # Optional, build-time only. Defaults to /dev/null so no placeholder file
+    # has to exist (and so no credential can be committed by accident). To use
+    # a key, point CF_API_KEY_FILE at a file outside the repo that contains it.
+    file: ${CF_API_KEY_FILE:-./docker/cf_api_key.txt}

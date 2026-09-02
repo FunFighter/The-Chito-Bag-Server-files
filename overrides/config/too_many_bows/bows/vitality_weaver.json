@@ -1,0 +1,12 @@
+{
+  "direct_hit_damage_override": -1.0,
+  "heal_shooter_on_hit": true,
+  "heal_percent_of_damage_dealt": 0.5,
+  "cap_heal_to_target_current_health": true,
+  "run_on_hit_callback": true,
+  "heal_sound_enabled": true,
+  "heal_sound_volume": 1.0,
+  "heal_sound_pitch": 1.0,
+  "discard_after_entity_hit": true,
+  "allow_pickup": true
+}

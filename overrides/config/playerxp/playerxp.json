@@ -1,0 +1,11 @@
+{
+  "shouldGiveLevels": false,
+  "baseXP": 5.0,
+  "baseLevels": 1,
+  "xpFromPlayerBattles": true,
+  "luckyEggXpBoost": true,
+  "luckyEggXpMultiplier": 1.5,
+  "shouldExpShare": true,
+  "expShareSize": 1,
+  "expShareRadius": 35.0
+}

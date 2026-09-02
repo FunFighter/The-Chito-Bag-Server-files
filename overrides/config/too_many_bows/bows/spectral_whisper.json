@@ -1,0 +1,10 @@
+{
+  "direct_hit_damage": 7.0,
+  "max_lifetime_ticks": 140,
+  "obstacles_to_phase_through": 1,
+  "phase_position_offset_multiplier": 0.5,
+  "stop_when_out_of_phases": true,
+  "discard_when_out_of_phases": false,
+  "entity_hit_box_inflation": 1.0,
+  "allow_pickup": true
+}

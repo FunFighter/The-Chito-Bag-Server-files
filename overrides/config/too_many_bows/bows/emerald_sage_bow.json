@@ -1,0 +1,11 @@
+{
+  "direct_hit_damage_override": -1.0,
+  "spawn_xp_on_living_hit": true,
+  "xp_amount": 10,
+  "xp_blacklist": [
+    "minecraft:armor_stand",
+    "minecraft:wandering_trader"
+  ],
+  "discard_after_entity_hit": true,
+  "allow_pickup": true
+}

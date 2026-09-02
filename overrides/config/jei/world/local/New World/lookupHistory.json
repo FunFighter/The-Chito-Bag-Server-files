@@ -1,0 +1,21 @@
+[
+  {"version":1},
+  {"ingredient":{"id":"rctmod:trainer_card"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"cobblemon:exp_candy_l"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"cobblemon:rare_candy"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"mega_showdown:keystone"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"mega_showdown:mega_bracelet"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"cobblenav:pokenav_item_old"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"cobblenav:pokenav_item_base"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"starcatcher_delight:starcaught_fillet_epic"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"minecraft:gravel"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"cobbledgacha:gacha_machine_12"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:medallion_of_renewal"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:medallion_of_renewal_fragment"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:galar_particle"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:galar_particle_ore"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:deepslate_galar_particle_ore"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:galar_particle_block"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"mega_showdown:deoxys_meteorite"},"type":"item_stack","bookmarkType":"INGREDIENT"},
+  {"ingredient":{"id":"legendarymonuments:gs_ball"},"type":"item_stack","bookmarkType":"INGREDIENT"}
+]

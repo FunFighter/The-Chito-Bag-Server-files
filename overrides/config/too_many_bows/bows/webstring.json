@@ -1,0 +1,8 @@
+{
+  "direct_hit_damage_override": -1.0,
+  "apply_slowness_on_hit": true,
+  "slowness_duration_ticks": 60,
+  "slowness_amplifier": 1,
+  "discard_after_entity_hit": true,
+  "allow_pickup": true
+}

@@ -1,0 +1,9 @@
+{
+  "direct_hit_damage_override": -1.0,
+  "no_gravity": false,
+  "start_hit_timer_on_entity_hit": true,
+  "start_hit_timer_on_block_hit": true,
+  "discard_after_hit_delay": true,
+  "hit_discard_delay_ticks": 40,
+  "allow_pickup": false
+}

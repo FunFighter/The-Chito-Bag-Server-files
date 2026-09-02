@@ -1,0 +1,7 @@
+# CurseForge project IDs excluded from the dedicated server image.
+# Format: <projectID>  # name -- reason
+# Clients must still install these; they are part of the full pack.
+
+513689  # Smooth Swapping -- client-only, crashes the server with
+        # "Attempted to load class net/minecraft/client/gui/screens/Screen
+        #  for invalid dist DEDICATED_SERVER" (verified on a real boot).

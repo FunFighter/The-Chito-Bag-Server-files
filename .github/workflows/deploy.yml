@@ -1,0 +1,107 @@
+# Deploys the pack to the physical server it runs on.
+#
+# This uses a SELF-HOSTED runner installed on that machine. GitHub does not
+# meter self-hosted minutes, so this is free on any plan, the ~2 GB image never
+# crosses the network, and nothing has to be exposed to the internet.
+#
+# SECURITY: only ever attach a self-hosted runner to a PRIVATE repo. On a public
+# repo anyone can open a pull request and execute code on your box.
+
+name: Deploy Chito Bag Server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'manifest.json'
+      - 'overrides/**'
+      - 'docker/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Rebuild image from scratch (ignore layer cache)'
+        type: boolean
+        default: false
+
+# One deploy at a time; a second push waits rather than racing the first.
+concurrency:
+  group: chitobag-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, chitobag]
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out pack
+        uses: actions/checkout@v4
+
+      - name: Verify host prerequisites
+        run: |
+          set -euo pipefail
+          test -f .env || { echo "::error::.env missing on the runner host. Copy .env.example to .env and fill it in."; exit 1; }
+          set -a; . ./.env; set +a
+          : "${MC_DATA_DIR:?MC_DATA_DIR not set in .env}"
+          # The world lives on an external drive. If it is not mounted, abort --
+          # otherwise the bind mount would fail or a fresh world would appear.
+          mountpoint -q "$(df --output=target "$MC_DATA_DIR" | tail -1)" \
+            || { echo "::error::$MC_DATA_DIR is not on a mounted filesystem"; exit 1; }
+          test -d "$MC_DATA_DIR" || { echo "::error::$MC_DATA_DIR does not exist"; exit 1; }
+          echo "data dir OK: $MC_DATA_DIR ($(df -h --output=avail "$MC_DATA_DIR" | tail -1 | tr -d ' ') free)"
+
+      - name: Build image
+        run: |
+          set -euo pipefail
+          docker compose build ${{ inputs.force_rebuild && '--no-cache' || '' }}
+
+      - name: Warn players and back up the world
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          set -a; . ./.env; set +a
+          # Only if the server is already up.
+          if [ "$(docker inspect -f '{{.State.Running}}' chitobag-server 2>/dev/null)" = "true" ]; then
+            docker exec chitobag-server mc-cmd "say Server restarting for an update in 30 seconds." || true
+            sleep 20
+            docker exec chitobag-server mc-cmd "say Restarting now -- back in a few minutes." || true
+            sleep 10
+          fi
+
+      - name: Restart onto the new image
+        run: |
+          set -euo pipefail
+          # `up -d` recreates only if the image or config actually changed.
+          # stop_grace_period in docker-compose.yml gives the world time to save.
+          docker compose up -d --remove-orphans
+
+      - name: Wait for healthy
+        run: |
+          set -euo pipefail
+          echo "waiting for the server to accept connections (mod load takes a few minutes)..."
+          for i in $(seq 1 120); do
+            status="$(docker inspect -f '{{.State.Health.Status}}' chitobag-server 2>/dev/null || echo missing)"
+            case "$status" in
+              healthy)   echo "server is healthy after $((i*15))s"; exit 0 ;;
+              unhealthy) echo "::error::container reported unhealthy"; docker compose logs --tail=100; exit 1 ;;
+            esac
+            if [ "$(docker inspect -f '{{.State.Running}}' chitobag-server 2>/dev/null)" != "true" ]; then
+              echo "::error::container exited during startup"; docker compose logs --tail=200; exit 1
+            fi
+            sleep 15
+          done
+          echo "::error::timed out waiting for health"; docker compose logs --tail=200; exit 1
+
+      - name: Reclaim disk from superseded images
+        if: always()
+        run: docker image prune -f --filter 'until=168h'
+
+      - name: Report
+        if: always()
+        run: |
+          echo "### Chito Bag Server deploy" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          docker compose ps >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

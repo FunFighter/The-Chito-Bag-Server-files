@@ -1,0 +1,10 @@
+##
+#The % chance that when a shiny spawns, it is a rare shiny.
+# Default: 30.0
+# Range: 0.0 ~ 1.7976931348623157E308
+rare_shiny_chance = 30.0
+##
+#The % chance that when a shiny spawns, it is an epic shiny.
+# Default: 30.0
+# Range: 0.0 ~ 1.7976931348623157E308
+epic_shiny_chance = 30.0
