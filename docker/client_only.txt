@@ -5,3 +5,7 @@
 513689  # Smooth Swapping -- client-only, crashes the server with
         # "Attempted to load class net/minecraft/client/gui/screens/Screen
         #  for invalid dist DEDICATED_SERVER" (verified on a real boot).
+
+1475755 # Simply Tooltips -- CurseForge marks it Client. It is a mandatory
+        # dependency of simplyswords and simplybows, but both declare it
+        # side = "CLIENT", so a dedicated server neither needs nor loads it.
