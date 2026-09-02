@@ -6,6 +6,8 @@
 #   docker attach chitobag-server        # server console (Ctrl-P Ctrl-Q to detach)
 #   docker compose stop                  # graceful; waits for the world to save
 
+name: chitobag
+
 services:
   chitobag:
     build:

@@ -30,6 +30,12 @@ concurrency:
   group: chitobag-deploy
   cancel-in-progress: false
 
+# The runner checks out into its own _work directory, which is wiped and
+# recreated per job -- so .env cannot live in the checkout. It stays at a fixed
+# host path alongside the data directory.
+env:
+  ENV_FILE: /srv/chitobag/.env
+
 jobs:
   deploy:
     runs-on: [self-hosted, chitobag]
@@ -42,8 +48,8 @@ jobs:
       - name: Verify host prerequisites
         run: |
           set -euo pipefail
-          test -f .env || { echo "::error::.env missing on the runner host. Copy .env.example to .env and fill it in."; exit 1; }
-          set -a; . ./.env; set +a
+          test -f "$ENV_FILE" || { echo "::error::$ENV_FILE missing on the runner host. Copy .env.example there and fill it in."; exit 1; }
+          set -a; . "$ENV_FILE"; set +a
           : "${MC_DATA_DIR:?MC_DATA_DIR not set in .env}"
           # The world lives on an external drive. If it is not mounted, abort --
           # otherwise the bind mount would fail or a fresh world would appear.
@@ -55,13 +61,12 @@ jobs:
       - name: Build image
         run: |
           set -euo pipefail
-          docker compose build ${{ inputs.force_rebuild && '--no-cache' || '' }}
+          docker compose --env-file "$ENV_FILE" build ${{ inputs.force_rebuild && '--no-cache' || '' }}
 
       - name: Warn players and back up the world
         continue-on-error: true
         run: |
           set -euo pipefail
-          set -a; . ./.env; set +a
           # Only if the server is already up.
           if [ "$(docker inspect -f '{{.State.Running}}' chitobag-server 2>/dev/null)" = "true" ]; then
             docker exec chitobag-server mc-cmd "say Server restarting for an update in 30 seconds." || true
@@ -75,7 +80,7 @@ jobs:
           set -euo pipefail
           # `up -d` recreates only if the image or config actually changed.
           # stop_grace_period in docker-compose.yml gives the world time to save.
-          docker compose up -d --remove-orphans
+          docker compose --env-file "$ENV_FILE" up -d --remove-orphans
 
       - name: Wait for healthy
         run: |
@@ -85,14 +90,14 @@ jobs:
             status="$(docker inspect -f '{{.State.Health.Status}}' chitobag-server 2>/dev/null || echo missing)"
             case "$status" in
               healthy)   echo "server is healthy after $((i*15))s"; exit 0 ;;
-              unhealthy) echo "::error::container reported unhealthy"; docker compose logs --tail=100; exit 1 ;;
+              unhealthy) echo "::error::container reported unhealthy"; docker compose --env-file "$ENV_FILE" logs --tail=100; exit 1 ;;
             esac
             if [ "$(docker inspect -f '{{.State.Running}}' chitobag-server 2>/dev/null)" != "true" ]; then
-              echo "::error::container exited during startup"; docker compose logs --tail=200; exit 1
+              echo "::error::container exited during startup"; docker compose --env-file "$ENV_FILE" logs --tail=200; exit 1
             fi
             sleep 15
           done
-          echo "::error::timed out waiting for health"; docker compose logs --tail=200; exit 1
+          echo "::error::timed out waiting for health"; docker compose --env-file "$ENV_FILE" logs --tail=200; exit 1
 
       - name: Reclaim disk from superseded images
         if: always()
@@ -103,5 +108,5 @@ jobs:
         run: |
           echo "### Chito Bag Server deploy" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          docker compose ps >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          docker compose --env-file "$ENV_FILE" ps >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
           echo '```' >> "$GITHUB_STEP_SUMMARY"
