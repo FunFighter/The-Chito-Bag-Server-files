@@ -49,8 +49,11 @@ jobs:
         run: |
           set -euo pipefail
           test -f "$ENV_FILE" || { echo "::error::$ENV_FILE missing on the runner host. Copy .env.example there and fill it in."; exit 1; }
-          set -a; . "$ENV_FILE"; set +a
-          : "${MC_DATA_DIR:?MC_DATA_DIR not set in .env}"
+          # Read the one value we need rather than sourcing the file. Compose's
+          # .env format is not shell: an unquoted value with spaces (MC_MOTD)
+          # makes `source` try to execute part of it.
+          MC_DATA_DIR="$(grep -E '^[[:space:]]*MC_DATA_DIR=' "$ENV_FILE" | tail -1 | cut -d= -f2- | sed -E 's/^[[:space:]]*//; s/[[:space:]]*$//; s/^"(.*)"$/\1/; s/^'"'"'(.*)'"'"'$/\1/')"
+          : "${MC_DATA_DIR:?MC_DATA_DIR not set in $ENV_FILE}"
           # The world lives on an external drive. If it is not mounted, abort --
           # otherwise the bind mount would fail or a fresh world would appear.
           mountpoint -q "$(df --output=target "$MC_DATA_DIR" | tail -1)" \
