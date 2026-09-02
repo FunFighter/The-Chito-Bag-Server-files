@@ -141,7 +141,7 @@
 	#for the first trainer of a series (you may use 'relativeLevelCap' for that).
 	# Default: 15
 	# Range: 1 ~ 2147483646
-	initialLevelCap = 100
+	initialLevelCap = 15
 	#━━━━━━━━━━
 	#The level cap of a player is based of the strongest pokemon from the party of their next
 	#required trainer in a series. The relativeLevelCap is added to the resulting value. For
@@ -161,7 +161,7 @@
 	freeroamRequiresCompletedSeries = true
 	#━━━━━━━━━━
 	#If enabled the level cap of a players will not prevent their pokemon from gaining experience and leveling up.
-	allowOverLeveling = true
+	allowOverLeveling = false
 
 [Debug]
 	#━━━━━━━━━━

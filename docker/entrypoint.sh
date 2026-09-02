@@ -14,6 +14,10 @@ PGID="${PGID:-1000}"
 
 log() { echo "[entrypoint] $*"; }
 
+# Without this a `set -e` abort is silent -- the container just exits with a
+# bare status and no indication of where it stopped.
+trap 'rc=$?; log "ERROR: aborted at line $LINENO with status $rc"; exit $rc' ERR
+
 # --------------------------------------------------------------- ownership --
 # Match the container user to the drive's owner so bind mounts stay writable
 # from the host without root-owned files appearing on it.
@@ -173,7 +177,12 @@ if [ -n "${RCON_PASSWORD:-}" ]; then
     printf '%s' "$RCON_PASSWORD" > "$PASSWORD_FILE"
 elif [ ! -s "$PASSWORD_FILE" ]; then
     # Random per-deployment secret; nothing outside the container can reach it.
-    tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32 > "$PASSWORD_FILE"
+    # Order matters: `head` must come FIRST. Written the other way round --
+    # `tr -dc ... < /dev/urandom | head -c 32` -- head exits after 32 bytes, tr
+    # dies of SIGPIPE, and pipefail turns that into a 141 that kills the
+    # entrypoint before the JVM ever starts. Every stage below reads to EOF.
+    # (python3 here is python3-minimal, which has no `secrets` module.)
+    head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c1-32 > "$PASSWORD_FILE"
 fi
 chmod 600 "$PASSWORD_FILE"
 RCON_PASSWORD="$(cat "$PASSWORD_FILE")"

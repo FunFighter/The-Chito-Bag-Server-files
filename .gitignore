@@ -22,3 +22,6 @@ launch*.log
 # cannot be fetched at build time. Without these the image is incomplete.
 !overrides/mods/
 !overrides/mods/*.jar
+
+# CurseForge leaves these behind on re-export.
+*.toml.bak

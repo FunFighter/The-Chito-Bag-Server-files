@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Download every file in a CurseForge manifest.json.
 
-Jars land in <out>/mods, zip datapacks in <out>/datapacks. Project IDs listed in
-client_only.txt are skipped -- they crash a dedicated server.
+Jars land in <out>/mods. Zips are classified by content, not by extension: a
+pack that contains data/ is a datapack the server needs, anything else (a
+resource pack, a shaderpack) is client-only and is discarded here. Project IDs
+listed in client_only.txt are skipped entirely -- they crash a dedicated server
+or do nothing on one.
 
 Uses the official CurseForge API when CF_API_KEY is set, otherwise the public
 website download endpoint. Every archive is integrity-checked; any failure is
@@ -79,8 +82,8 @@ def resolve_and_download(entry):
             name = unquote(os.path.basename(urlparse(url).path))
             if not name:
                 raise RuntimeError(f"no filename in {url}")
-            sub = "mods" if name.lower().endswith(".jar") else "datapacks"
-            dest = os.path.join(OUT, sub, name)
+            is_jar = name.lower().endswith(".jar")
+            dest = os.path.join(OUT, "mods" if is_jar else "staging", name)
             os.makedirs(os.path.dirname(dest), exist_ok=True)
             with resp, open(dest, "wb") as fh:
                 while chunk := resp.read(1 << 20):
@@ -88,6 +91,19 @@ def resolve_and_download(entry):
             if not zipfile.is_zipfile(dest):
                 os.remove(dest)
                 raise RuntimeError("not a valid archive")
+            if not is_jar:
+                # Extension does not say what a zip is. Only a pack carrying
+                # data/ affects the server; resource packs and shaderpacks are
+                # for clients and would just litter world/datapacks.
+                with zipfile.ZipFile(dest) as z:
+                    entries = z.namelist()
+                if any(e.startswith("data/") for e in entries):
+                    final = os.path.join(OUT, "datapacks", name)
+                    os.makedirs(os.path.dirname(final), exist_ok=True)
+                    os.replace(dest, final)
+                else:
+                    os.remove(dest)
+                    return (pid, fid, name, None, "client-pack")
             return (pid, fid, name, None)
         except Exception as exc:
             last = f"{type(exc).__name__}: {exc}"
@@ -105,18 +121,24 @@ def main():
     with ThreadPoolExecutor(max_workers=8) as ex:
         results = list(ex.map(resolve_and_download, files))
 
+    skipped = [r for r in results if len(r) > 4]
     failed = [r for r in results if r[2] is None]
     for pid, fid, _, err in failed:
         print(f"[fetch] FAILED project={pid} file={fid}: {err}", file=sys.stderr)
     if failed:
         sys.exit(f"[fetch] {len(failed)} file(s) could not be downloaded -- aborting build")
 
+    staging = os.path.join(OUT, "staging")
+    if os.path.isdir(staging):
+        os.rmdir(staging)
+    os.makedirs(os.path.join(OUT, "datapacks"), exist_ok=True)
     jars = sorted(os.listdir(os.path.join(OUT, "mods")))
     with open(os.path.join(OUT, "mods.list"), "w") as fh:
         fh.write("\n".join(jars) + "\n")
     dp = os.path.join(OUT, "datapacks")
     print(f"[fetch] ok: {len(jars)} jars, "
-          f"{len(os.listdir(dp)) if os.path.isdir(dp) else 0} datapacks", flush=True)
+          f"{len(os.listdir(dp)) if os.path.isdir(dp) else 0} datapacks, "
+          f"{len(skipped)} client-side packs discarded", flush=True)
 
 if __name__ == "__main__":
     main()

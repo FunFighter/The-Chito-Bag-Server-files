@@ -9,3 +9,32 @@
 1475755 # Simply Tooltips -- CurseForge marks it Client. It is a mandatory
         # dependency of simplyswords and simplybows, but both declare it
         # side = "CLIENT", so a dedicated server neither needs nor loads it.
+
+# --- Added by the 2026-09-01 pack re-export -------------------------------
+# CurseForge tags each of these Client-only. Several (Sodium, Iris,
+# EntityCulling, ImmediatelyFast) are pure rendering mods that cannot load on
+# a dedicated server at all.
+
+844662    # [EMF] Entity Model Features [Fabric & Forge]
+568563    # [ETF] Entity Texture Features - [Fabric & Forge]
+254284    # AmbientSounds 6
+1105290   # Auroras
+892086    # Chat Animation [Smooth Chat]
+407206    # Chat Heads
+1333024   # Cobblemon Effectiveness
+531351    # Continuity
+1196599   # Cool Rain
+297038    # CraftPresence
+1217518   # Create Better FPS
+335493    # Dynamic FPS
+250419    # Enchantment Descriptions
+1063296   # Enhanced Boss Bars
+448233    # Entity Culling Fabric/Forge
+686911    # ImmediatelyFast
+455508    # Iris Shaders
+393442    # LambDynamicLights
+1082538   # MoreCobblemonTweaks
+433760    # Not Enough Animations
+521480    # Skin Layers 3D
+394468    # Sodium
+1056812   # UniLib

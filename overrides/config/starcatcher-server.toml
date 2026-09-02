@@ -2,7 +2,7 @@
 give_guide = true
 #Award rod & guide the first time a player fishes with a vanilla fishing rod
 give_rod = true
-#Enables/disables the ability to bonemeal farmland for worms.
+#Enables/disables the ability to bonemeal block for worms.
 enable_worms = true
 enable_minigame = true
 #Enables/disables fishes caught being unlocked for all online team members.
@@ -70,3 +70,5 @@ hide_catches = false
 enable_rod_durability = false
 #Allows players to use a keybind to open the guide without having the item
 allow_guide_keybind = true
+#Whether players should see and access the guide help pages
+enable_guide_help_pages = true
