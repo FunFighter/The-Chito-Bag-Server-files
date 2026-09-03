@@ -90,6 +90,14 @@ while IFS= read -r -d '' src; do
 done < <(find "$MC_HOME/defaults/config" -type f -print0)
 log "config: seeded $seeded new file(s)"
 
+# -------------------------------------------------------------- icon --
+# Minecraft reads this once at startup and only accepts exactly 64x64.
+# Seeded like the configs: placed if absent, never overwriting a hand-edit.
+if [ -f "$MC_HOME/defaults/server-icon.png" ] && [ ! -e "$DATA_DIR/server-icon.png" ]; then
+    cp -a "$MC_HOME/defaults/server-icon.png" "$DATA_DIR/server-icon.png"
+    log "server-icon.png: seeded"
+fi
+
 # ------------------------------------------------------- server.properties --
 if [ ! -f "$DATA_DIR/server.properties" ]; then
     cat > "$DATA_DIR/server.properties" <<PROPS

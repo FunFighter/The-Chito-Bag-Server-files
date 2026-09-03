@@ -69,6 +69,8 @@ COPY --from=mods     /build/out/mods.list         ${MC_HOME}/mods.list
 # Pack configs ship as defaults; the entrypoint seeds them into /data once and
 # never overwrites an admin's edits afterwards.
 COPY overrides/config                             ${MC_HOME}/defaults/config
+# Server list icon, seeded into /data on first run.
+COPY overrides/server-icon.png                    ${MC_HOME}/defaults/server-icon.png
 # Any jar in overrides/mods (pack-local mods not on CurseForge).
 COPY overrides/mods                               ${MC_HOME}/override-mods
 COPY docker/entrypoint.sh                         /usr/local/bin/entrypoint.sh
