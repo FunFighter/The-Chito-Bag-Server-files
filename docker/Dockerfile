@@ -44,7 +44,7 @@ ARG NEOFORGE_VERSION
 ENV NEOFORGE_VERSION=${NEOFORGE_VERSION} \
     MC_HOME=/opt/chitobag \
     DATA_DIR=/data \
-    MC_XMS=4G \
+    MC_XMS= \
     MC_XMX=auto \
     EULA=false
 

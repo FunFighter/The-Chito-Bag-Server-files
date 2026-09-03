@@ -49,7 +49,8 @@ services:
 
     environment:
       EULA: ${EULA:-false}
-      MC_XMS: ${MC_XMS:-4G}
+      # Empty by default so the entrypoint can set Xms = Xmx.
+      MC_XMS: ${MC_XMS:-}
       MC_XMX: ${MC_XMX:-auto}
       MC_MOTD: ${MC_MOTD:-The Chito Bag Server}
       MC_MAX_PLAYERS: ${MC_MAX_PLAYERS:-20}
