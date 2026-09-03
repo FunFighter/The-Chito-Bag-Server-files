@@ -1,0 +1,13 @@
+[Unit]
+Description=Chito Bag server backup every 30 minutes
+
+[Timer]
+# On the hour and half hour, and catch up after a reboot.
+OnCalendar=*:00,30
+Persistent=true
+# Keeps the backup off the exact minute the server does its own autosave.
+RandomizedDelaySec=60
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

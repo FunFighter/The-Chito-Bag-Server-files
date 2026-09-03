@@ -1,0 +1,16 @@
+[Unit]
+Description=Chito Bag server backup snapshot
+Documentation=https://github.com/FunFighter/The-Chito-Bag-Server-files
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+User=minecraft
+Group=minecraft
+ExecStart=/srv/chitobag/repo/backup/backup.sh
+# The snapshot holds save-off while it runs; if it wedges, kill it so the
+# trap fires and saving comes back on rather than staying off indefinitely.
+TimeoutStartSec=20min
+Nice=10
+IOSchedulingClass=idle
