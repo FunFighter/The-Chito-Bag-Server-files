@@ -1,0 +1,12 @@
+[Unit]
+Description=Offsite backup mirror, hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+# The local backup runs on the hour and half hour; stay out of its way.
+RandomizedDelaySec=5min
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

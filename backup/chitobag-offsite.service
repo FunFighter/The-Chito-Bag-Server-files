@@ -1,0 +1,13 @@
+[Unit]
+Description=Mirror Chito Bag backups to the offsite machine
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=minecraft
+Group=minecraft
+ExecStart=/srv/chitobag/repo/backup/offsite.sh
+TimeoutStartSec=2h
+Nice=15
+IOSchedulingClass=idle
