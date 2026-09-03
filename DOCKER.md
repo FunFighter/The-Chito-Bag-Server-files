@@ -111,7 +111,13 @@ server — add its CurseForge project ID to [docker/client_only.txt](docker/clie
 
 ## Memory
 
-`MC_XMX` defaults to 10G (what the manifest recommends) and `MC_MEM_LIMIT` to
-13g. Keep the container limit meaningfully above the heap — the JVM also needs
+`MC_XMX` defaults to `auto`, which derives the heap from the container's own
+cgroup limit at startup and leaves the larger of 3 GB or 15% for non-heap use
+(metaspace for ~190 mods, code cache, G1 structures, netty buffers). On the
+26 GB limit in use on `wonton` that comes out at 22 GB. `MC_XMS` follows
+`MC_XMX`, since Aikar's G1 flags assume a fixed heap.
+
+Set `MC_XMX` explicitly to override. Keep the container limit meaningfully
+above the heap — the JVM also needs
 metaspace, GC structures and direct buffers, and a container OOM-kill is an
 unclean stop.

@@ -41,7 +41,7 @@ requires write access. Repo settings back this up — workflow tokens default to
 `read` and cannot approve pull requests.
 
 **The rule that keeps this safe: never add a `pull_request` trigger to any
-workflow in this repo.** The runner is long-lived and runs as `brandonl`, who is
+workflow in this repo.** The runner is long-lived and runs as `minecraft`, who is
 in the `docker` group — which is root-equivalent. A single `pull_request` trigger
 would hand that to any stranger. Make the repo private if you ever need one.
 
@@ -53,7 +53,7 @@ On the server (already staged at `/srv/chitobag/actions-runner`):
 cd /srv/chitobag/actions-runner
 ./config.sh --url https://github.com/FunFighter/The-Chito-Bag-Server-files \
             --token <TOKEN> --labels chitobag --name wonton --unattended
-sudo ./svc.sh install brandonl
+sudo ./svc.sh install minecraft
 sudo ./svc.sh start
 ```
 
@@ -116,6 +116,7 @@ deploy — an unmounted drive and a restart that does not wait for the world sav
 | | |
 |---|---|
 | Host | `wonton`, CachyOS, Ryzen 9 7945HX3D (32 threads), 30 GB RAM |
+| Service account | `minecraft` (uid 1001), in the `docker` group |
 | Repo | [FunFighter/The-Chito-Bag-Server-files](https://github.com/FunFighter/The-Chito-Bag-Server-files) (public) |
 | Repo checkout | `/srv/chitobag/repo` |
 | World data | `/srv/chitobag/data` (btrfs, COW disabled — see below) |
