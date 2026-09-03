@@ -50,7 +50,7 @@ services:
     environment:
       EULA: ${EULA:-false}
       MC_XMS: ${MC_XMS:-4G}
-      MC_XMX: ${MC_XMX:-10G}
+      MC_XMX: ${MC_XMX:-auto}
       MC_MOTD: ${MC_MOTD:-The Chito Bag Server}
       MC_MAX_PLAYERS: ${MC_MAX_PLAYERS:-20}
       MC_ONLINE_MODE: ${MC_ONLINE_MODE:-true}

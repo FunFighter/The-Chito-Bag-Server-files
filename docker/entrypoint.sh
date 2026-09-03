@@ -120,18 +120,71 @@ heap_mb() {
         *)  echo "$v" ;;
     esac
 }
-XMX_MB="$(heap_mb "${MC_XMX:-10G}")"
+
+# Derive a heap from the container's own memory limit. A fixed default is
+# always wrong: too small and most of the container sits unused, too large and
+# the cgroup OOM-kills the JVM, which is an unclean stop and risks the world.
+autosize_heap_mb() {
+    local raw="" limit_mb headroom_mb heap_mb
+    # cgroup v2 first, then v1.
+    if [ -r /sys/fs/cgroup/memory.max ]; then
+        raw="$(cat /sys/fs/cgroup/memory.max)"
+    elif [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+        raw="$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+    fi
+    # "max", empty, or an absurd number all mean "no limit set".
+    case "$raw" in
+        ''|max|*[!0-9]*) echo ""; return ;;
+    esac
+    [ "$raw" -gt 1152921504606846976 ] 2>/dev/null && { echo ""; return; }
+
+    limit_mb=$(( raw / 1048576 ))
+    # Measured on this pack: non-heap usage (metaspace for ~190 mods, code
+    # cache, G1 structures, netty direct buffers) runs 1.7-2.7 GiB. 15% or 3
+    # GiB, whichever is larger, keeps a real margin at every size.
+    headroom_mb=$(( limit_mb * 15 / 100 ))
+    [ "$headroom_mb" -lt 3072 ] && headroom_mb=3072
+    heap_mb=$(( limit_mb - headroom_mb ))
+    # Round down to a whole 512 MB so the flag reads tidily.
+    heap_mb=$(( heap_mb / 512 * 512 ))
+    [ "$heap_mb" -lt 2048 ] && heap_mb=2048
+    echo "$heap_mb"
+}
+
+# MC_XMX=auto (or unset) sizes the heap from the container limit.
+if [ -z "${MC_XMX:-}" ] || [ "${MC_XMX,,}" = "auto" ]; then
+    AUTO_MB="$(autosize_heap_mb)"
+    if [ -n "$AUTO_MB" ]; then
+        MC_XMX="${AUTO_MB}M"
+        log "heap auto-sized to ${AUTO_MB}M from the container memory limit"
+        # Non-heap usage is dominated by metaspace for ~190 mods and barely
+        # shrinks, so a small limit starves the heap rather than the overhead.
+        if [ "$AUTO_MB" -lt 4096 ]; then
+            log "WARNING: only ${AUTO_MB}M left for the heap. This pack needs a"
+            log "         container limit of at least 12g to run comfortably;"
+            log "         raise MC_MEM_LIMIT or set MC_XMX explicitly."
+        fi
+    else
+        MC_XMX="4G"
+        log "no container memory limit found; defaulting heap to ${MC_XMX}"
+    fi
+fi
+# Xms defaults to Xmx: a dedicated server gains nothing from growing the heap
+# at runtime, and AlwaysPreTouch commits it up front anyway.
+: "${MC_XMS:=$MC_XMX}"
+
+XMX_MB="$(heap_mb "$MC_XMX")"
 
 if [ "$XMX_MB" -ge 12288 ]; then
     G1_NEW=40; G1_MAX_NEW=50; G1_REGION=16M; G1_RESERVE=15; G1_IHOP=20
-    log "large-heap G1 tuning (${MC_XMX:-10G} >= 12G)"
+    log "large-heap G1 tuning (${MC_XMX} >= 12G)"
 else
     G1_NEW=30; G1_MAX_NEW=40; G1_REGION=8M;  G1_RESERVE=20; G1_IHOP=15
 fi
 
 {
-    echo "-Xms${MC_XMS:-4G}"
-    echo "-Xmx${MC_XMX:-10G}"
+    echo "-Xms${MC_XMS}"
+    echo "-Xmx${MC_XMX}"
     echo "-XX:+UseG1GC"
     echo "-XX:+ParallelRefProcEnabled"
     echo "-XX:MaxGCPauseMillis=200"
@@ -207,7 +260,7 @@ if [ "$(id -u)" = "0" ]; then
     chown "$PUID:$PGID" "$PASSWORD_FILE" "$DATA_DIR/server.properties" 2>/dev/null || true
 fi
 
-log "starting NeoForge ${NEOFORGE_VERSION} (heap ${MC_XMS:-4G}-${MC_XMX:-10G})"
+log "starting NeoForge ${NEOFORGE_VERSION} (heap ${MC_XMS}-${MC_XMX})"
 
 ARGFILE="$MC_HOME/libraries/net/neoforged/neoforge/${NEOFORGE_VERSION}/unix_args.txt"
 [ -f "$ARGFILE" ] || { log "ERROR: missing $ARGFILE"; exit 1; }

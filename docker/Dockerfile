@@ -45,7 +45,7 @@ ENV NEOFORGE_VERSION=${NEOFORGE_VERSION} \
     MC_HOME=/opt/chitobag \
     DATA_DIR=/data \
     MC_XMS=4G \
-    MC_XMX=10G \
+    MC_XMX=auto \
     EULA=false
 
 # gosu drops root to the runtime uid so files on the mounted drive stay owned
