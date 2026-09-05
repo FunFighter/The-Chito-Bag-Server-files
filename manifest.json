@@ -1460,8 +1460,8 @@
       "fileID": 8676468,
       "required": true,
       "isLocked": false
-    },
-  ],
+    }
+  ]
   "overrides": "overrides",
   "image": "profileImage/server_image.png"
 }
